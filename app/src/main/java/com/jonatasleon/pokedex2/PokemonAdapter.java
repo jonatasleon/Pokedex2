@@ -56,8 +56,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokeView
         ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
         Sprite sprite = pokemon.getSprites().get(0);
-        String spriteUrl = sprite.getResourceUri().substring(1);
-        Log.i("SPRITE", spriteUrl);
+        String spriteUrl = sprite.getResourceUri();
 
         Call<SpriteResponse> call = apiService.getSprite(spriteUrl);
         call.enqueue(new Callback<SpriteResponse>() {
@@ -67,13 +66,10 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokeView
                     SpriteResponse spriteResponse = response.body();
                     String image = "http://pokeapi.co" + spriteResponse.getImage();
 
-                    Log.i("POKEMON", image);
                     Picasso.with(holder.ivPokemon.getContext())
                             .load(image)
                             .resize(64, 64)
                             .into(holder.ivPokemon);
-                } else {
-                    Log.i("POKEMON", response.message());
                 }
             }
 

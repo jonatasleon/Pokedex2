@@ -25,7 +25,7 @@ public class Sprite {
     }
 
     public String getResourceUri() {
-        return resourceUri;
+        return resourceUri.substring(1);
     }
 
     public void setResourceUri(String resourceUri) {
