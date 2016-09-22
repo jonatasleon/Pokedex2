@@ -53,6 +53,18 @@ public class Pokemon {
         this.pokeTypes = pokeTypes;
     }
 
+    public String typesToString() {
+        String types = "";
+
+        for (int i = 0; i < pokeTypes.size(); i++) {
+            if(i > 0)
+                types += ", ";
+            types += pokeTypes.get(i).getName();
+        }
+
+        return types;
+    }
+
     public String getName() {
         return name;
     }

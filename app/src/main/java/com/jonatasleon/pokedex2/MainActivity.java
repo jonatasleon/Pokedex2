@@ -10,6 +10,10 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends AppCompatActivity {
     List<Pokemon> pokemons = new ArrayList<>();
     RecyclerView recyclerView;
@@ -36,53 +40,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addData() {
-        Pokemon pokemon;
+        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-        pokemon = new Pokemon("grama", "Bulbasaur");
-        pokemons.add(pokemon);
+        for(int i = 1; i <= 30; i++) {
+            Call<Pokemon> call = apiService.getPokemon(i);
+            call.enqueue(new Callback<Pokemon>() {
+                @Override
+                public void onResponse(Call<Pokemon> call, Response<Pokemon> response) {
+                    if(response.isSuccessful()) {
+                        Pokemon pokemon = response.body();
 
-        pokemon = new Pokemon("fogo", "Charizard");
-        pokemons.add(pokemon);
+                        pokemons.add(pokemon);
+                        pokemonAdapter.notifyDataSetChanged();
 
-        pokemon = new Pokemon("agua", "Squirtle");
-        pokemons.add(pokemon);
+                        Log.i("POKEMON", "Name: " + pokemon.getName());
+                        Log.i("POKEMON", "Attack: " + pokemon.getAttack());
+                        Log.i("POKEMON", "Defense: " + pokemon.getDefense());
+                        Log.i("POKEMON", "Health: " + pokemon.getHealth());
+                        Log.i("POKEMON", "Height: " + pokemon.getHeight());
+                        Log.i("POKEMON", "Weight: " + pokemon.getWeight());
 
-        pokemon = new Pokemon("grama", "Bulbasaur");
-        pokemons.add(pokemon);
+                    }
+                }
 
-        pokemon = new Pokemon("fogo", "Charizard");
-        pokemons.add(pokemon);
+                @Override
+                public void onFailure(Call<Pokemon> call, Throwable t) {
 
-        pokemon = new Pokemon("agua", "Squirtle");
-        pokemons.add(pokemon);
-
-        pokemon = new Pokemon("grama", "Bulbasaur");
-        pokemons.add(pokemon);
-
-        pokemon = new Pokemon("fogo", "Charizard");
-        pokemons.add(pokemon);
-
-        pokemon = new Pokemon("agua", "Squirtle");
-        pokemons.add(pokemon);
-
-        pokemon = new Pokemon("grama", "Bulbasaur");
-        pokemons.add(pokemon);
-
-        pokemon = new Pokemon("fogo", "Charizard");
-        pokemons.add(pokemon);
-
-        pokemon = new Pokemon("agua", "Squirtle");
-        pokemons.add(pokemon);
-
-        pokemon = new Pokemon("grama", "Bulbasaur");
-        pokemons.add(pokemon);
-
-        pokemon = new Pokemon("fogo", "Charizard");
-        pokemons.add(pokemon);
-
-        pokemon = new Pokemon("agua", "Squirtle");
-        pokemons.add(pokemon);
-
-        pokemonAdapter.notifyDataSetChanged();
+                }
+            });
+        }
     }
 }

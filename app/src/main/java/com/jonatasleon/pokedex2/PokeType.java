@@ -3,7 +3,7 @@ package com.jonatasleon.pokedex2;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Created by jonatasleon on 20/09/16.
+ * Created by jonatasleon on 21/09/16.
  */
 public class PokeType {
 
