@@ -68,6 +68,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokeView
 
                     Picasso.with(holder.ivPokemon.getContext())
                             .load(image)
+                            .centerCrop()
                             .resize(64, 64)
                             .into(holder.ivPokemon);
                 }
