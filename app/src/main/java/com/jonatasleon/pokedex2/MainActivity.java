@@ -1,11 +1,14 @@
 package com.jonatasleon.pokedex2;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +38,43 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(pokemonAdapter);
+        recyclerView.addOnItemTouchListener(
+                new RecyclerTouchListener(
+                        this,
+                        recyclerView,
+                        new RecyclerTouchListener.ClickListener() {
+                            @Override
+                            public void onClick(View view, int position) {
+
+                                Intent i = new Intent(
+                                        MainActivity.this,
+                                        DetailActivity.class);
+
+                                Pokemon pokemon = pokemons.get(position);
+                                int id = pokemon.getPokedexId();
+
+                                i.putExtra("ID", id);
+
+                                startActivity(i);
+                            }
+
+                            @Override
+                            public void onLongClick(View view, int position) {
+
+                                Pokemon pokemon = pokemons.get(position);
+
+                                String info = "";
+                                info += "Name: " + pokemon.getName();
+                                info += "\nAttack: " + pokemon.getAttack();
+                                info += "\nDefense: " + pokemon.getDefense();
+                                info += "\nHealth: " + pokemon.getHealth();
+                                info += "\nSpeed: " + pokemon.getSpeed();
+                                info += "\nId: " + pokemon.getPokedexId();
+
+                                Toast.makeText(MainActivity.this, info, Toast.LENGTH_LONG).show();
+
+                            }
+                        }));
 
         addData();
     }
