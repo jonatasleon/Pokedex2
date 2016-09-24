@@ -19,9 +19,13 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
+    Meta lastMeta = null;
     List<Pokemon> pokemons = new ArrayList<>();
     RecyclerView recyclerView;
     PokemonAdapter pokemonAdapter;
+    ApiInterface apiService;
+
+    boolean isLoading = true;
 
 
     @Override
@@ -29,8 +33,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        recyclerView = (RecyclerView) findViewById(R.id.rv_pokemons);
+        apiService = ApiClient.getClient().create(ApiInterface.class);
 
+        recyclerView = (RecyclerView) findViewById(R.id.rv_pokemons);
         pokemonAdapter = new PokemonAdapter(pokemons);
 
         RecyclerView.LayoutManager layoutManager;
@@ -39,76 +44,93 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(pokemonAdapter);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                LinearLayoutManager lm;
+                int pastVisibleItems, visibleItemsCount, totalItemCount;
+
+                if(dy > 0) {
+                    lm = (LinearLayoutManager) recyclerView.getLayoutManager();
+                    visibleItemsCount = lm.getChildCount();
+                    totalItemCount = lm.getItemCount();
+                    pastVisibleItems = lm.findFirstVisibleItemPosition();
+
+                    if(!isLoading && (visibleItemsCount + pastVisibleItems) >= totalItemCount) {
+                        isLoading = true;
+                        Call<PokemonsResponse> call = apiService.getPokemons(lastMeta.getNext());
+                        call.enqueue(pokemonsResponseCallBack);
+                    }
+                }
+
+            }
+        });
+
         recyclerView.addOnItemTouchListener(
-                new RecyclerTouchListener(
-                        this,
-                        recyclerView,
-                        new RecyclerTouchListener.ClickListener() {
-                            @Override
-                            public void onClick(View view, int position) {
+            new RecyclerTouchListener(this, recyclerView, new RecyclerTouchListener.ClickListener() {
+                @Override
+                public void onClick(View view, int position) {
 
-                                Intent i = new Intent(
-                                        MainActivity.this,
-                                        DetailActivity.class);
+                    Intent i = new Intent(
+                                MainActivity.this,
+                                DetailActivity.class);
 
-                                Pokemon pokemon = pokemons.get(position);
-                                int id = pokemon.getPokedexId();
+                        Pokemon pokemon = pokemons.get(position);
+                        int id = pokemon.getPokedexId();
 
-                                i.putExtra("ID", id);
+                        i.putExtra("ID", id);
 
-                                startActivity(i);
-                            }
+                        startActivity(i);
+                    }
 
-                            @Override
-                            public void onLongClick(View view, int position) {
+                    @Override
+                    public void onLongClick(View view, int position) {
 
-                                Pokemon pokemon = pokemons.get(position);
+                        Pokemon pokemon = pokemons.get(position);
 
-                                String info = "";
-                                info += "Name: " + pokemon.getName();
-                                info += "\nAttack: " + pokemon.getAttack();
-                                info += "\nDefense: " + pokemon.getDefense();
-                                info += "\nHealth: " + pokemon.getHealth();
-                                info += "\nSpeed: " + pokemon.getSpeed();
-                                info += "\nId: " + pokemon.getPokedexId();
+                        String info = "";
+                        info += "Name: " + pokemon.getName();
+                        info += "\nAttack: " + pokemon.getAttack();
+                        info += "\nDefense: " + pokemon.getDefense();
+                        info += "\nHealth: " + pokemon.getHealth();
+                        info += "\nSpeed: " + pokemon.getSpeed();
+                        info += "\nId: " + pokemon.getPokedexId();
 
-                                Toast.makeText(MainActivity.this, info, Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, info, Toast.LENGTH_LONG).show();
 
-                            }
-                        }));
+                    }
+                }));
 
         addData();
     }
 
     private void addData() {
-        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-        for(int i = 1; i <= 30; i++) {
-            Call<Pokemon> call = apiService.getPokemon(i);
-            call.enqueue(new Callback<Pokemon>() {
-                @Override
-                public void onResponse(Call<Pokemon> call, Response<Pokemon> response) {
-                    if(response.isSuccessful()) {
-                        Pokemon pokemon = response.body();
-
-                        pokemons.add(pokemon);
-                        pokemonAdapter.notifyDataSetChanged();
-
-                        Log.i("POKEMON", "Name: " + pokemon.getName());
-                        Log.i("POKEMON", "Attack: " + pokemon.getAttack());
-                        Log.i("POKEMON", "Defense: " + pokemon.getDefense());
-                        Log.i("POKEMON", "Health: " + pokemon.getHealth());
-                        Log.i("POKEMON", "Height: " + pokemon.getHeight());
-                        Log.i("POKEMON", "Weight: " + pokemon.getWeight());
-
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Pokemon> call, Throwable t) {
-
-                }
-            });
-        }
+        Call<PokemonsResponse> call = apiService.getPokemons(10, 0);
+        call.enqueue(pokemonsResponseCallBack);
     }
+
+    private Callback<PokemonsResponse> pokemonsResponseCallBack = new Callback<PokemonsResponse>() {
+        @Override
+        public void onResponse(Call<PokemonsResponse> call, Response<PokemonsResponse> response) {
+            if(response.isSuccessful()) {
+                PokemonsResponse pokemonsResponse = response.body();
+                lastMeta = pokemonsResponse.getMeta();
+                pokemons.addAll(pokemonsResponse.getPokemons());
+                pokemonAdapter.notifyDataSetChanged();
+                isLoading = false;
+            }
+        }
+
+        @Override
+        public void onFailure(Call<PokemonsResponse> call, Throwable t) {
+
+        }
+    };
 }
