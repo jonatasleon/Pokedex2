@@ -25,8 +25,6 @@ public class MainActivity extends AppCompatActivity {
     PokemonAdapter pokemonAdapter;
     ApiInterface apiService;
 
-    boolean isLoading = true;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,31 +42,12 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(pokemonAdapter);
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        recyclerView.addOnScrollListener(new EndlessRecyclerViewScrollListener((LinearLayoutManager) layoutManager) {
             @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                LinearLayoutManager lm;
-                int pastVisibleItems, visibleItemsCount, totalItemCount;
-
-                if(dy > 0) {
-                    lm = (LinearLayoutManager) recyclerView.getLayoutManager();
-                    visibleItemsCount = lm.getChildCount();
-                    totalItemCount = lm.getItemCount();
-                    pastVisibleItems = lm.findFirstVisibleItemPosition();
-
-                    if(!isLoading && (visibleItemsCount + pastVisibleItems) >= totalItemCount) {
-                        isLoading = true;
-                        Call<PokemonsResponse> call = apiService.getPokemons(lastMeta.getNext());
-                        call.enqueue(pokemonsResponseCallBack);
-                    }
-                }
-
+            public void onLoadMore(int page, int totalItemsCount) {
+                Call<PokemonsResponse> call = apiService.getPokemons(lastMeta.getNext());
+                call.enqueue(pokemonsResponseCallBack);
+                Log.i("ENDLESS", lastMeta.getNext());
             }
         });
 
@@ -124,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
                 lastMeta = pokemonsResponse.getMeta();
                 pokemons.addAll(pokemonsResponse.getPokemons());
                 pokemonAdapter.notifyDataSetChanged();
-                isLoading = false;
             }
         }
 
